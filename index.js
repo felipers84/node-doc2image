@@ -17,19 +17,34 @@ app.use(cors());
 
 app.post('/', upload.single('arquivo'), function (req, res, next) {
 
-    res.writeHead(200, {
-        'Content-Type': 'image/' + format
-    });
+
+
+
+
     if (req.file.mimetype.indexOf('html') > -1) {
-        console.log('Arquivo HTML detectado.');
-        var html = req.file.buffer.toString('utf8');
-        html += '<script> if ( document.getElementsByTagName(\'body\')[0].style.backgroundColor == "") { document.getElementsByTagName(\'body\')[0].style.backgroundColor = "white"; }</script>';
-        console.log('Retornando imagem para o client...');
-        streamifier.createReadStream(html).pipe(convert()).pipe(res);
+        try {
+            console.log('Arquivo HTML detectado.');
+            var html = req.file.buffer.toString('utf8');
+            html += '<script> if ( document.getElementsByTagName(\'body\')[0].style.backgroundColor == "") { document.getElementsByTagName(\'body\')[0].style.backgroundColor = "white"; }</script>';
+            console.log(html);
+            console.log(new Date().toUTCString() + ' - Retornando imagem para o client...');
+            res.writeHead(200, {
+                'Content-Type': 'image/' + format
+            });
+            streamifier.createReadStream(html)
+                .pipe(convert()).pipe(res);
+        }
+        catch (exception) {
+            const msgErro = new Date().toUTCString() + ' - Ocorreu um erro: ' + JSON.stringify(exception);
+            console.error(msgErro);
+            res.status(500).send({ erro: msgErro});
+        }
+
     }
     else {
-        console.log('Arquivo enviado não suportado!');
-        res.send(500);
+        const msgErro = new Date().toUTCString() + ' - Arquivo enviado não suportado!';
+        console.log(msgErro);
+        res.status(500).send({erro: msgErro});
     }
 });
 
